@@ -1,0 +1,8 @@
+platform :ios, '15.0'
+use_frameworks!
+
+target 'demo' do
+  pod 'Kvell', :path => '../'
+  pod 'KvellNetworking', :path => '../'
+  pod 'KvellDevKit', :path => '../DevKit'
+end
