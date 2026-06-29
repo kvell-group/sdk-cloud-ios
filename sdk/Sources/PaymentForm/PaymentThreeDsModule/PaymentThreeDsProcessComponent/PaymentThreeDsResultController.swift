@@ -77,8 +77,20 @@ final class PaymentThreeDsResultController: BaseViewController {
                     self?.configuration.paymentUIDelegate.paymentFormDidHide()
                 }
             } else {
-                let apiError = code.flatMap {
-                    ApiError.getFullErrorDescriptionIntentApi(from: $0)
+                let apiError: String?
+                if let code = code, !code.isEmpty {
+                    if Int(code) != nil {
+                        // Числовой код ошибки — разворачиваем в описание из словаря.
+                        apiError = ApiError.getFullErrorDescriptionIntentApi(from: code)
+                    } else if code.hasPrefix("<") || code.contains("<html") {
+                        // HTML-страница ACS (3DS failed) — не показываем разметку, даём обобщённый текст.
+                        apiError = ApiError.getFullErrorDescriptionIntentApi(from: nil)
+                    } else {
+                        // Готовое серверное сообщение (CardHolderMessage/Message).
+                        apiError = code
+                    }
+                } else {
+                    apiError = nil
                 }
                 
                 var failedTransaction = transaction?.transaction
