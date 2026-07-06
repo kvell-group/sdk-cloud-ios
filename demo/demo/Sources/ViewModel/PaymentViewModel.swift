@@ -8,9 +8,13 @@
 
 import UIKit
 import Foundation
+import Kvell
 
 enum PaymentViewModelType: Codable {
     case publicId
+    case apiUrl
+    case apiSecret
+    case privateKey
     case amount
     case currency
     case invoiceId
@@ -33,6 +37,9 @@ enum PaymentViewModelType: Codable {
     var title: String {
         switch self {
         case .publicId: return "PublicId:"
+        case .apiUrl: return "Api URL:"
+        case .apiSecret: return "ApiSecret (Dev backend):"
+        case .privateKey: return "Private Key (X-Sign, optional):"
         case .amount: return "Amount:"
         case .currency: return "Currency (Optional):"
         case .invoiceId: return "InvoiceId (Optional):"
@@ -56,7 +63,11 @@ enum PaymentViewModelType: Codable {
     //text
     var `default`: String {
         switch self {
-        case .publicId: return "test_api_00000000000000000000002"
+        // Креды тестового терминала дев-окружения — рабочие дефолты демо.
+        case .publicId: return "d55c38ac-d442-47e9-b7cd-35a03320281b"
+        case .apiUrl: return KvellApi.baseURLString
+        case .apiSecret: return "45faa630-ea0b-49cb-a7e0-744c1e5a41e3"
+        case .privateKey: return ""
         case .amount: return "100"
         case .currency: return "RUB"
         case .invoiceId: return "AB1234"
@@ -78,7 +89,14 @@ enum PaymentViewModelType: Codable {
     }
     
     //placeholder
-    var placeholder: String { return "Введите текст" }
+    var placeholder: String {
+        switch self {
+        case .apiUrl: return "URL тестового сервера"
+        case .apiSecret: return "ApiSecret терминала (Basic-auth)"
+        case .privateKey: return "Секрет подписи запросов (HS256)"
+        default: return "Введите текст"
+        }
+    }
 }
 
 struct PaymentViewModel: Codable {
@@ -92,33 +110,44 @@ struct PaymentViewModel: Codable {
         self.text = type.default
     }
     
+    private static let allTypes: [PaymentViewModelType] = [
+        .publicId,
+        .apiUrl,
+        .apiSecret,
+        .privateKey,
+        .amount,
+        .currency,
+        .invoiceId,
+        .description,
+        .accountId,
+        .email,
+        .payerFirstName,
+        .payerLastName,
+        .payerMiddleName,
+        .payerBirthday,
+        .payerAddress,
+        .payerStreet,
+        .payerCity,
+        .payerCountry,
+        .payerPhone,
+        .payerPostcode,
+        .jsonData
+    ]
+
     static func getViewModel() -> [PaymentViewModel] {
-        guard let data = UserDefaults.standard.data(forKey: PaymentViewModel.key),
-              let array = try? JSONDecoder().decode([PaymentViewModel].self, from: data)
-        else {
-            return [
-                .init(.publicId),
-                .init(.amount),
-                .init(.currency),
-                .init(.invoiceId),
-                .init(.description),
-                .init(.accountId),
-                .init(.email),
-                .init(.payerFirstName),
-                .init(.payerLastName),
-                .init(.payerMiddleName),
-                .init(.payerBirthday),
-                .init(.payerAddress),
-                .init(.payerStreet),
-                .init(.payerCity),
-                .init(.payerCountry),
-                .init(.payerPhone),
-                .init(.payerPostcode),
-                .init(.jsonData)
-            ]
+        let saved: [PaymentViewModel]
+        if let data = UserDefaults.standard.data(forKey: PaymentViewModel.key),
+           let array = try? JSONDecoder().decode([PaymentViewModel].self, from: data) {
+            saved = array
+        } else {
+            saved = []
         }
-        
-        return array
+
+        // Сохранённый в UserDefaults список может не содержать полей, добавленных
+        // в новых версиях демо, — дополняем его до полного набора.
+        return allTypes.map { type in
+            saved.first(where: { $0.type == type }) ?? PaymentViewModel(type)
+        }
     }
     
     static func saving(_ model: [PaymentViewModel]) {

@@ -4,26 +4,18 @@ Dev-only утилиты для локальной разработки Kvell SDK
 
 ## Что внутри
 
+- `MockNetworkDispatcher` — мок-сценарии оплаты (success / 3DS / decline) без обращения к сети.
+- `LoggingNetworkDispatcher` — обёртка над реальным диспетчером: сырые HTTP request/response пишутся в консоль Xcode, в `DevLogStore` (экран Logs в демо) и, опционально, в файл по пути из переменной окружения `KVELL_DEV_LOG_PATH`.
+- `DevLogStore` — in-memory журнал логов; демо показывает его на экране Logs (share / clear).
 - `JWTSigner` — JWT HS256 на CryptoKit (без внешних зависимостей).
-- `makeRequestSigner(secret:)` — фабрика замыкания для `KvellURLSessionNetworkDispatcher.instance.requestSigner`.
-- `DevConfig` — секрет и base URL из переменных окружения.
+- `makeRequestSigner(secret:)` — фабрика замыкания для `KvellURLSessionNetworkDispatcher.instance.requestSigner` (заголовок `X-Sign`).
 
-## Как задать секрет
+## Тестовые данные
 
-### Вариант 1: Xcode Scheme → Environment Variables
-
-1. Xcode → Product → Scheme → Edit Scheme → Run → Arguments → Environment Variables.
-2. Добавить: `KVELL_DEV_SIGN_SECRET` = `<ваш секрет>`.
-
-### Вариант 2: Экспорт перед `xcodebuild`
-
-```bash
-export KVELL_DEV_SIGN_SECRET="your_secret_here"
-xcodebuild ...
-```
+Все параметры тестового окружения — URL сервера, PublicId, ApiSecret, Private Key подписи — вводятся в форме демо-приложения и сохраняются в UserDefaults симулятора. В коде и в git секретов нет.
 
 ## Важно
 
-- Секрет **никогда не коммитить** в git.
+- Секреты **никогда не коммитить** в git.
 - `KvellDevKit` подключается **только** к demo через `:path => '../DevKit'`.
 - В `Package.swift` и распространяемых podspec (`Kvell-SDK-iOS.podspec`, `KvellNetworking.podspec`) этот модуль **не упоминается**.

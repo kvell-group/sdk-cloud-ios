@@ -36,6 +36,22 @@ final class DemoViewController: BaseViewController {
 
         let tap = UITapGestureRecognizer(target: self, action: #selector(tapAction))
         view.addGestureRecognizer(tap)
+
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            title: "Logs",
+            style: .plain,
+            target: self,
+            action: #selector(showLogs)
+        )
+    }
+
+    @objc private func showLogs() {
+        let logsController = LogsViewController()
+        if let navigationController = navigationController {
+            navigationController.pushViewController(logsController, animated: true)
+        } else {
+            present(UINavigationController(rootViewController: logsController), animated: true)
+        }
     }
 
     @objc private func tapAction() {
@@ -94,6 +110,7 @@ final class DemoViewController: BaseViewController {
         PaymentViewModel.saving(viewModels)
     
         guard let publicId =  getText(.publicId),
+              let apiUrl = getText(.apiUrl),
               let amount = getText(.amount),
               let currency = getText(.currency),
               let invoiceId =  getText(.invoiceId),
@@ -155,11 +172,15 @@ final class DemoViewController: BaseViewController {
             postcode: payerPostcode
         )
         
+        // В Dev backend каждый charge должен иметь уникальный InvoiceId — иначе бэк отвергает дубликат заказа.
+        let isDevBackend = modeSegment.selectedSegmentIndex == 0
+        let effectiveInvoiceId = isDevBackend ? "KVELL-" + String(UUID().uuidString.prefix(8)) : invoiceId
+
         let paymentData = PaymentData()
             .setAmount(amount)
             .setCurrency(currency)
             .setCardholderName("CP SDK")
-            .setInvoiceId(invoiceId)
+            .setInvoiceId(effectiveInvoiceId)
             .setDescription(descript)
             .setAccountId(account)
             .setPayer(payer)
@@ -169,27 +190,32 @@ final class DemoViewController: BaseViewController {
             .setRecurrent(recurrent)
         
         // Выбор режима по segmented control:
-        // 0 = Dev backend, 1 = Mock: success, 2 = Mock: 3DS, 3 = Mock: decline
-        let mockDispatcher: MockNetworkDispatcher?
+        // 0 = Dev backend (живой classic charge + лог HTTP), 1 = Mock: success, 2 = Mock: 3DS, 3 = Mock: decline
+        // Все данные окружения (URL, ApiSecret, Private Key) берутся из полей формы — в коде хардкодов нет.
+        let dispatcher: KvellNetworkDispatcher?
         switch modeSegment.selectedSegmentIndex {
         case 1:
-            mockDispatcher = MockNetworkDispatcher(scenario: .success)
+            dispatcher = MockNetworkDispatcher(scenario: .success)
         case 2:
-            mockDispatcher = MockNetworkDispatcher(scenario: .requires3DS)
+            dispatcher = MockNetworkDispatcher(scenario: .requires3DS)
         case 3:
-            mockDispatcher = MockNetworkDispatcher(scenario: .decline)
+            dispatcher = MockNetworkDispatcher(scenario: .decline)
         default:
-            mockDispatcher = nil
+            dispatcher = LoggingNetworkDispatcher()
         }
 
-        if mockDispatcher == nil {
-            // Dev-режим: подписываем запросы, dev base URL.
-            KvellURLSessionNetworkDispatcher.instance.requestSigner =
-                makeRequestSigner(secret: DevConfig.signSecret)
-        }
+        let apiSecretText = getText(.apiSecret) ?? ""
+        let apiSecret: String? = (isDevBackend && !apiSecretText.isEmpty) ? apiSecretText : nil
+
+        // Подпись X-Sign включается, только если в форме задан Private Key.
+        // Сбрасывать обязательно: диспетчер — синглтон, замыкание переживает смену настроек.
+        let privateKey = getText(.privateKey) ?? ""
+        KvellURLSessionNetworkDispatcher.instance.requestSigner =
+            privateKey.isEmpty ? nil : makeRequestSigner(secret: privateKey)
 
         let configuration = PaymentConfiguration(
             publicId: publicId,
+            apiSecret: apiSecret,
             paymentData: paymentData,
             delegate: self,
             uiDelegate: self,
@@ -197,11 +223,11 @@ final class DemoViewController: BaseViewController {
             paymentMethodSequence: [],
 //            singlePaymentMode: .tpay,
             useDualMessagePayment: footer.demoActionSwitch.isOn,
-            apiUrl: DevConfig.devBaseURL,
+            apiUrl: apiUrl,
             showResultScreenForSinglePaymentMode: true,
             // successRedirectUrl: "https://ya.ru",
             // failRedirectUrl: "https://ya.ru",
-            networkDispatcher: mockDispatcher
+            networkDispatcher: dispatcher
         )
 
         PaymentOptionsViewController.present(with: configuration, from: self)
