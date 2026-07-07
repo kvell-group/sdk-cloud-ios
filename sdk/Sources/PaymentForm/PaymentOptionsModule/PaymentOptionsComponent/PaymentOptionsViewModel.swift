@@ -26,7 +26,8 @@ final class BottomSheetPaymentOptionsViewModel {
     func loadPublicKeyAndCreateIntent(
         completion: @escaping (Result<([PaymentMethod], [String]?, PaymentIntentResponse), Error>) -> Void
     ) {
-        KvellApi.getPublicKey(dispatcher: configuration.networkDispatcher ?? KvellURLSessionNetworkDispatcher.instance) { [weak self] publicKey, _ in
+        KvellApi.getPublicKey(apiUrl: configuration.apiUrl,
+                              dispatcher: configuration.networkDispatcher ?? KvellURLSessionNetworkDispatcher.instance) { [weak self] publicKey, _ in
             guard let self else { return }
             guard let pem = publicKey?.Pem, let version = publicKey?.Version else {
                 completion(.failure(PaymentIntentError.missingPublicKey))

@@ -22,7 +22,7 @@ public class ThreeDsProcessor: NSObject, WKNavigationDelegate {
 
     // Фактический финал 3DS у гейтвея pay-pulse: /3ds/return отдаёт страницу
     // с автосабмит-формой POST(PaRes, MD) на PaymentUrl из charge-запроса
-    // (kvell://sdk.pay-pulse.com — см. KvellApi.charge). Кастомную схему
+    // (kvell://sdk.pay-pulse.example — см. KvellApi.charge). Кастомную схему
     // WKWebView загрузить не может — перехватываем её так же, как TermUrl.
     private static let PAYMENT_URL_SCHEME = "kvell"
     
@@ -50,7 +50,18 @@ public class ThreeDsProcessor: NSObject, WKNavigationDelegate {
                 guard let self = self else {
                     return
                 }
-                
+
+                if let error = error {
+                    DispatchQueue.main.async { [weak self] in
+                        guard let self = self, !self.didComplete else { return }
+                        self.didComplete = true
+                        self.delegate?.onAuthorizationFailed(with: "Unable to load 3DS autorization page.\n\(error.localizedDescription)")
+
+                        LoggerService.shared.logApiRequest(method: request.httpMethod ?? "", url: url.absoluteString, success: false)
+                    }
+                    return
+                }
+
                 if let httpResponse = response as? HTTPURLResponse, (httpResponse.statusCode == 200 || httpResponse.statusCode == 201), let data = data {
                     DispatchQueue.main.async { [weak self] in
                         guard let self = self else {
@@ -72,8 +83,10 @@ public class ThreeDsProcessor: NSObject, WKNavigationDelegate {
                     }
                 } else if let httpResponse = response as? HTTPURLResponse {
                     DispatchQueue.main.async { [weak self] in
-                        self?.delegate?.onAuthorizationFailed(with: "Unable to load 3DS autorization page.\nStatus code: \(httpResponse.statusCode)")
-                        
+                        guard let self = self, !self.didComplete else { return }
+                        self.didComplete = true
+                        self.delegate?.onAuthorizationFailed(with: "Unable to load 3DS autorization page.\nStatus code: \(httpResponse.statusCode)")
+
                         LoggerService.shared.logApiRequest(method: request.httpMethod ?? "", url: url.absoluteString, success: false)
                     }
                 }

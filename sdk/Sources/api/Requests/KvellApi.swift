@@ -3,10 +3,8 @@ import Foundation
 import UIKit
 
 public class KvellApi {
-    public static let baseURLString = "https://cloud.prod.pay-pulse.com/"
-    public static let baseIntentURLString = "https://cloud.prod.pay-pulse.com/"
-    private let threeDsSuccessURL = "https://cloud.prod.pay-pulse.com/success"
-    private let threeDsFailURL = "https://cloud.prod.pay-pulse.com/fail"
+    public static let baseURLString = "https://api.pay-pulse.example/"
+    public static let baseIntentURLString = "https://api.pay-pulse.example/"
     private let publicId: String
     private let apiSecret: String?
     private let apiUrl: String
@@ -30,7 +28,7 @@ public class KvellApi {
         if (apiUrl.isEmpty) {
             self.apiUrl = KvellApi.baseURLString
         } else {
-            self.apiUrl = apiUrl
+            self.apiUrl = apiUrl.hasSuffix("/") ? apiUrl : apiUrl + "/"
         }
     }
     
@@ -257,7 +255,7 @@ public class KvellApi {
                        email: String? = nil,
                        payer: [String: Any?]? = nil,
                        jsonData: String? = nil,
-                       paymentUrl: String = "kvell://sdk.pay-pulse.com",
+                       paymentUrl: String = "kvell://sdk.pay-pulse.example",
                        completion: @escaping (Int?, CardsResponse?) -> Void) {
         let params: [String: Any?] = [
             "Amount": amount,
@@ -348,10 +346,12 @@ extension JSONDecoder.KeyDecodingStrategy {
 }
 
 extension KvellApi {
-    public class func getPublicKey(dispatcher: KvellNetworkDispatcher = KvellURLSessionNetworkDispatcher.instance,
+    public class func getPublicKey(apiUrl: String = baseURLString,
+                                   dispatcher: KvellNetworkDispatcher = KvellURLSessionNetworkDispatcher.instance,
                                    completion: @escaping (PublicKeyResponse?, Error?) -> Void) {
+        let base = apiUrl.isEmpty ? baseURLString : (apiUrl.hasSuffix("/") ? apiUrl : apiUrl + "/")
         let kvellRequest = KvellRequest(
-            path: baseURLString + "payments/publickey",
+            path: base + "payments/publickey",
             method: .get,
             params: [:],
             headers: [:],
