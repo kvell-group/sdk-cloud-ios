@@ -6,3 +6,33 @@ target 'demo' do
   pod 'KvellNetworking', :path => '../'
   pod 'KvellDevKit', :path => '../DevKit'
 end
+
+# Dev pods подхватывают новые/удалённые файлы и ресурсы SDK только после pod install.
+# post_install фиксирует хэш состава SDK, а build-фаза "[Kvell] SDK Sync Check" в таргете demo
+# валит сборку с подсказкой, если состав изменился после последнего pod install.
+post_install do |installer|
+  manifest = `#{File.join(__dir__, 'sdk-manifest.sh')}`.strip
+  File.write(File.join(__dir__, 'Pods', '.kvell-sdk-manifest'), manifest)
+
+  project = Xcodeproj::Project.open(File.join(__dir__, 'demo.xcodeproj'))
+  target = project.targets.find { |t| t.name == 'demo' }
+  next if target.nil?
+
+  phase_name = '[Kvell] SDK Sync Check'
+  phase = target.shell_script_build_phases.find { |p| p.name == phase_name }
+  if phase.nil?
+    phase = target.new_shell_script_build_phase(phase_name)
+    target.build_phases.delete(phase)
+    target.build_phases.unshift(phase)
+  end
+  phase.always_out_of_date = '1'
+  phase.shell_script = <<~SH
+    STORED=$(cat "${PODS_ROOT}/.kvell-sdk-manifest" 2>/dev/null || echo "")
+    CURRENT=$("${SRCROOT}/sdk-manifest.sh")
+    if [ "$CURRENT" != "$STORED" ]; then
+      echo "error: Состав файлов SDK изменился после последнего pod install — запустите demo/update-sdk.sh"
+      exit 1
+    fi
+  SH
+  project.save
+end

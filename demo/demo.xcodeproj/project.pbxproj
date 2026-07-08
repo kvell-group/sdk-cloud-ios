@@ -265,6 +265,7 @@
 			buildConfigurationList = 13B49ECE224A4795001F85CF /* Build configuration list for PBXNativeTarget "demo" */;
 			buildPhases = (
 				10F83362B530C25B90D5B265 /* [CP] Check Pods Manifest.lock */,
+				76918B7C2B2456143E0331A9 /* [Kvell] SDK Sync Check */,
 				13B49EB8224A4793001F85CF /* Sources */,
 				13B49EB9224A4793001F85CF /* Frameworks */,
 				13B49EBA224A4793001F85CF /* Resources */,
@@ -349,6 +350,25 @@
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
+		};
+		76918B7C2B2456143E0331A9 /* [Kvell] SDK Sync Check */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "[Kvell] SDK Sync Check";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "STORED=$(cat \"${PODS_ROOT}/.kvell-sdk-manifest\" 2>/dev/null || echo \"\")\nCURRENT=$(\"${SRCROOT}/sdk-manifest.sh\")\nif [ \"$CURRENT\" != \"$STORED\" ]; then\n  echo \"error: Состав файлов SDK изменился после последнего pod install — запустите demo/update-sdk.sh\"\n  exit 1\nfi\n";
 		};
 		86D8B6AC8745B4DEEC4C1A4A /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;

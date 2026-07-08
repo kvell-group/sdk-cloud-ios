@@ -68,7 +68,7 @@ enum PaymentViewModelType: Codable {
         case .amount: return "100"
         case .currency: return "RUB"
         case .invoiceId: return "AB1234"
-        case .description: return "A basket of oranges"
+        case .description: return "Оплата тестового заказа в демо-приложении Kvell"
         case .accountId: return "AB12"
         case .email: return "test@kvell.io"
         case .payerFirstName: return "Vasya"
@@ -140,8 +140,16 @@ struct PaymentViewModel: Codable {
 
         // Сохранённый в UserDefaults список может не содержать полей, добавленных
         // в новых версиях демо, — дополняем его до полного набора.
+        // Устаревшие дефолты прошлых версий сбрасываем на актуальные.
+        let outdatedDefaults = ["A basket of oranges"]
         return allTypes.map { type in
-            saved.first(where: { $0.type == type }) ?? PaymentViewModel(type)
+            guard let savedModel = saved.first(where: { $0.type == type }) else {
+                return PaymentViewModel(type)
+            }
+            if let text = savedModel.text, outdatedDefaults.contains(text) {
+                return PaymentViewModel(type)
+            }
+            return savedModel
         }
     }
     

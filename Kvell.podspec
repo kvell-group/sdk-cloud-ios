@@ -17,7 +17,7 @@ Pod::Spec.new do |spec|
   spec.source       = { :git => 'https://github.com/kvell-group/sdk-cloud-ios.git', :tag => "#{spec.version}" }
   spec.source_files = 'sdk/Sources/**/*.swift'
 
-  spec.resource_bundles = { 'KvellSDK' => ['sdk/Resources/**/*.{txt,json,png,jpeg,jpg,storyboard,xib,xcassets}'] }
+  spec.resource_bundles = { 'KvellSDK' => ['sdk/Resources/**/*.{txt,json,png,jpeg,jpg,storyboard,xib,xcassets,ttf,otf}'] }
 
   spec.requires_arc = true
 

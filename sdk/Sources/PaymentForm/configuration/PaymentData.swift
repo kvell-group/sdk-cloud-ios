@@ -54,6 +54,17 @@ public struct PaymentDataPayer: Codable {
                                                "Postcode": postcode] }
 }
 
+/// Позиция детализации заказа на странице оплаты (редизайн). `amount` — строка-число, как `PaymentData.amount`.
+public struct PaymentOrderLine {
+    public let title: String
+    public let amount: String
+
+    public init(title: String, amount: String) {
+        self.title = title
+        self.amount = amount
+    }
+}
+
 public class PaymentData {
     private(set) var splits: [Splits]?
     private(set) var payer: PaymentDataPayer?
@@ -67,7 +78,10 @@ public class PaymentData {
     private(set) var receipt: [String: Any]?
     private(set) var recurrent: Recurrent?
     private(set) var jsonData: String?
-  
+    private(set) var orderLines: [PaymentOrderLine] = []
+    private(set) var sessionLifetimeSeconds: Int?
+    var sessionDeadline: Date?
+
     var email: String?
     var saveCard: Bool? = nil
     var cryptogram: String?
@@ -159,6 +173,16 @@ public class PaymentData {
     
     public func setJsonData(_ jsonData: String) -> PaymentData {
         self.jsonData = jsonData
+        return self
+    }
+
+    public func setOrderLines(_ orderLines: [PaymentOrderLine]) -> PaymentData {
+        self.orderLines = orderLines
+        return self
+    }
+
+    public func setSessionLifetimeSeconds(_ sessionLifetimeSeconds: Int?) -> PaymentData {
+        self.sessionLifetimeSeconds = sessionLifetimeSeconds
         return self
     }
 }

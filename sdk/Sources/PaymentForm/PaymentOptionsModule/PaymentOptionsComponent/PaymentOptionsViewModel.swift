@@ -26,8 +26,10 @@ final class BottomSheetPaymentOptionsViewModel {
     func loadPublicKeyAndCreateIntent(
         completion: @escaping (Result<([PaymentMethod], [String]?, PaymentIntentResponse), Error>) -> Void
     ) {
+        let dispatcher = configuration.networkDispatcher ?? KvellURLSessionNetworkDispatcher.instance
+
         KvellApi.getPublicKey(apiUrl: configuration.apiUrl,
-                              dispatcher: configuration.networkDispatcher ?? KvellURLSessionNetworkDispatcher.instance) { [weak self] publicKey, _ in
+                              dispatcher: dispatcher) { [weak self] publicKey, _ in
             guard let self else { return }
             guard let pem = publicKey?.Pem, let version = publicKey?.Version else {
                 completion(.failure(PaymentIntentError.missingPublicKey))
@@ -37,20 +39,53 @@ final class BottomSheetPaymentOptionsViewModel {
             configuration.paymentData.pem = pem
             configuration.paymentData.version = version
 
-            guard let cardMethod = try? JSONDecoder().decode(
-                PaymentMethod.self,
-                from: Data(#"{"type":"Card"}"#.utf8)
-            ) else {
+            KvellApi.createIntent(
+                with: configuration,
+                paymentMethodSequence: configuration.paymentMethodSequence.map(\.rawValue),
+                dispatcher: dispatcher
+            ) { [weak self] intent in
+                guard let self else { return }
+                self.handleCreateIntentResult(intent, completion: completion)
+            }
+        }
+    }
+
+    private func handleCreateIntentResult(
+        _ intent: PaymentIntentResponse?,
+        completion: @escaping (Result<([PaymentMethod], [String]?, PaymentIntentResponse), Error>) -> Void
+    ) {
+        guard let intent else {
+            guard let fallback = Self.makeFallbackCardMethod() else {
                 completion(.failure(PaymentIntentError.intentNotCreated))
                 return
             }
 
-            let methods = [cardMethod]
+            let methods = [fallback]
             savePaymentLinks(from: methods)
             configuration.paymentData.cachedMethods = methods
 
             completion(.success((methods, ["Card"], BottomSheetPaymentOptionsViewModel.makePseudoIntent())))
+            return
         }
+
+        var methods = (intent.paymentMethods ?? []).filter {
+            guard let type = $0.type else { return false }
+            return PaymentMethodType(rawValue: type) != nil
+        }
+
+        if methods.isEmpty, let fallback = Self.makeFallbackCardMethod() {
+            methods = [fallback]
+        }
+
+        savePaymentLinks(from: methods)
+        configuration.paymentData.cachedMethods = methods
+        configuration.paymentData.intentId = intent.id
+
+        completion(.success((methods, intent.paymentMethodSequence, intent)))
+    }
+
+    private static func makeFallbackCardMethod() -> PaymentMethod? {
+        try? JSONDecoder().decode(PaymentMethod.self, from: Data(#"{"type":"Card"}"#.utf8))
     }
 
     private static func makePseudoIntent() -> PaymentIntentResponse {
@@ -111,6 +146,8 @@ final class BottomSheetPaymentOptionsViewModel {
             switch type {
             case .card:
                 print("Card: link не сохраняем")
+            default:
+                break
             }
         }
     }

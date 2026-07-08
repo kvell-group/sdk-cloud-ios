@@ -188,6 +188,10 @@ final class DemoViewController: BaseViewController {
             .setJsonData(jsonData)
             .setReceipt(receipt)
             .setRecurrent(recurrent)
+            .setSessionLifetimeSeconds(990)
+            .setOrderLines([
+                PaymentOrderLine(title: "Тестовый товар", amount: amount)
+            ])
         
         // Выбор режима по segmented control:
         // 0 = Dev backend (живой classic charge + лог HTTP), 1 = Mock: success, 2 = Mock: 3DS, 3 = Mock: decline
@@ -214,7 +218,7 @@ final class DemoViewController: BaseViewController {
             delegate: self,
             uiDelegate: self,
             emailBehavior: .optional,
-            paymentMethodSequence: [],
+            paymentMethodSequence: [.kvellPay, .card, .sbp, .tPay, .alfaPay],
 //            singlePaymentMode: .tpay,
             useDualMessagePayment: footer.demoActionSwitch.isOn,
             apiUrl: apiUrl,
