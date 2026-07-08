@@ -191,7 +191,7 @@ final class DemoViewController: BaseViewController {
         
         // Выбор режима по segmented control:
         // 0 = Dev backend (живой classic charge + лог HTTP), 1 = Mock: success, 2 = Mock: 3DS, 3 = Mock: decline
-        // Все данные окружения (URL, ApiSecret, Private Key) берутся из полей формы — в коде хардкодов нет.
+        // Все данные окружения (URL, ApiSecret) берутся из полей формы — в коде хардкодов нет.
         let dispatcher: KvellNetworkDispatcher?
         switch modeSegment.selectedSegmentIndex {
         case 1:
@@ -206,12 +206,6 @@ final class DemoViewController: BaseViewController {
 
         let apiSecretText = getText(.apiSecret) ?? ""
         let apiSecret: String? = (isDevBackend && !apiSecretText.isEmpty) ? apiSecretText : nil
-
-        // Подпись X-Sign включается, только если в форме задан Private Key.
-        // Сбрасывать обязательно: диспетчер — синглтон, замыкание переживает смену настроек.
-        let privateKey = getText(.privateKey) ?? ""
-        KvellURLSessionNetworkDispatcher.instance.requestSigner =
-            privateKey.isEmpty ? nil : makeRequestSigner(secret: privateKey)
 
         let configuration = PaymentConfiguration(
             publicId: publicId,

@@ -14,7 +14,6 @@ enum PaymentViewModelType: Codable {
     case publicId
     case apiUrl
     case apiSecret
-    case privateKey
     case amount
     case currency
     case invoiceId
@@ -39,7 +38,6 @@ enum PaymentViewModelType: Codable {
         case .publicId: return "PublicId:"
         case .apiUrl: return "Api URL:"
         case .apiSecret: return "ApiSecret (Dev backend):"
-        case .privateKey: return "Private Key (X-Sign, optional):"
         case .amount: return "Amount:"
         case .currency: return "Currency (Optional):"
         case .invoiceId: return "InvoiceId (Optional):"
@@ -67,7 +65,6 @@ enum PaymentViewModelType: Codable {
         case .publicId: return "d55c38ac-d442-47e9-b7cd-35a03320281b"
         case .apiUrl: return KvellApi.baseURLString
         case .apiSecret: return "45faa630-ea0b-49cb-a7e0-744c1e5a41e3"
-        case .privateKey: return ""
         case .amount: return "100"
         case .currency: return "RUB"
         case .invoiceId: return "AB1234"
@@ -93,7 +90,6 @@ enum PaymentViewModelType: Codable {
         switch self {
         case .apiUrl: return "URL тестового сервера"
         case .apiSecret: return "ApiSecret терминала (Basic-auth)"
-        case .privateKey: return "Секрет подписи запросов (HS256)"
         default: return "Введите текст"
         }
     }
@@ -114,7 +110,6 @@ struct PaymentViewModel: Codable {
         .publicId,
         .apiUrl,
         .apiSecret,
-        .privateKey,
         .amount,
         .currency,
         .invoiceId,
