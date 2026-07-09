@@ -1,7 +1,7 @@
 Pod::Spec.new do |spec|
 
   spec.name         = 'Kvell'
-  spec.version      = '1.0.2'
+  spec.version      = '1.1.0'
   spec.summary      = 'Core library that allows you to use internet acquiring from Kvell in your app'
   spec.description  = 'Core library that allows you to use internet acquiring from Kvell in your app.'
 
