@@ -3,8 +3,8 @@ import Foundation
 import UIKit
 
 public class KvellApi {
-    public static let baseURLString = "https://api.pay-pulse.example/"
-    public static let baseIntentURLString = "https://api.pay-pulse.example/"
+    public static let baseURLString = "https://cloud.prod.pay-pulse.com/"
+    public static let baseIntentURLString = "https://cloud.prod.pay-pulse.com/"
     private let publicId: String
     private let apiSecret: String?
     private let apiUrl: String
@@ -155,7 +155,7 @@ public class KvellApi {
         let amount = configuration.paymentData.amount
         let accountId = configuration.paymentData.accountId
         let email = configuration.paymentData.email
-        let paymentUrl = "kvell://sdk.pay-pulse.example"
+        let paymentUrl = "kvell://sdk.pay-pulse.com"
         let payer = configuration.paymentData.payer
         let recurrent = configuration.paymentData.recurrent?.toDictionary()
         let receipt = configuration.paymentData.receipt
@@ -255,7 +255,7 @@ public class KvellApi {
                        email: String? = nil,
                        payer: [String: Any?]? = nil,
                        jsonData: String? = nil,
-                       paymentUrl: String = "kvell://sdk.pay-pulse.example",
+                       paymentUrl: String = "kvell://sdk.pay-pulse.com",
                        completion: @escaping (Int?, CardsResponse?) -> Void) {
         let params: [String: Any?] = [
             "Amount": amount,

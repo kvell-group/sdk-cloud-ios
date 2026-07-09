@@ -113,7 +113,7 @@ public final class MockNetworkDispatcher: KvellNetworkDispatcher {
 private enum MockFixtures {
 
     // MARK: Public Key
-    // Реальный публичный ключ прод-гейтвея (эндпоинт /crypto/public-key/).
+    // Реальный публичный ключ с https://business.prod.pay-pulse.com/crypto/public-key/
     // Получен 2026-06-21. Используется чтобы RSAUtils / Card.makeCardCryptogramPacket
     // реально шифровал данные карты (проверка крипто-пайпа без бэка).
     static let publicKey = PublicKeyFixture(
@@ -127,11 +127,8 @@ private enum MockFixtures {
     """#.utf8)
 
     // MARK: Charge — 3DS required (CardsResponse, HTTP 200)
-    // AcsUrl — нерезолвящийся placeholder: SDK POST-ит на него реальным URLSession (мимо
-    // dispatcher-а), DNS-ошибка завершает сценарий через onAuthorizationFailed
-    // (экран ошибки вместо WebView с реальной ACS-страницей).
     static let chargeRequires3DS = Data(#"""
-    {"Success": false, "Model": {"TransactionId": 123456789, "AcsUrl": "https://acs.pay-pulse.example/", "PaReq": "mock-pa-req", "ThreeDsCallbackId": "mock-3ds-callback-id"}}
+    {"Success": false, "Model": {"TransactionId": 123456789, "AcsUrl": "https://business.prod.pay-pulse.com/", "PaReq": "mock-pa-req", "ThreeDsCallbackId": "mock-3ds-callback-id"}}
     """#.utf8)
 
     // MARK: Charge — decline (CardsResponse, HTTP 200)

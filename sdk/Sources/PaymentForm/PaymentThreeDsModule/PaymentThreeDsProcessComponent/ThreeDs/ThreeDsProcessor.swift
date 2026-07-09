@@ -22,7 +22,7 @@ public class ThreeDsProcessor: NSObject, WKNavigationDelegate {
 
     // Фактический финал 3DS у гейтвея pay-pulse: /3ds/return отдаёт страницу
     // с автосабмит-формой POST(PaRes, MD) на PaymentUrl из charge-запроса
-    // (kvell://sdk.pay-pulse.example — см. KvellApi.charge). Кастомную схему
+    // (kvell://sdk.pay-pulse.com — см. KvellApi.charge). Кастомную схему
     // WKWebView загрузить не может — перехватываем её так же, как TermUrl.
     private static let PAYMENT_URL_SCHEME = "kvell"
     
